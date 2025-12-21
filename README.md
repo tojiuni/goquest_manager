@@ -109,6 +109,7 @@ Follow these instructions to run the application directly on your local machine.
 
 5.  **Initialize the Database**
     ```bash
+    python main.py testdb
     python main.py initdb
     ```
 
