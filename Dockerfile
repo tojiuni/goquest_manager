@@ -9,7 +9,7 @@ COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN uvicorn main:app --host 0.0.0.0
 # Copy the rest of the application's code to the working directory
 COPY . .
 
