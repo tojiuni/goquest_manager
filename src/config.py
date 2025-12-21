@@ -1,7 +1,7 @@
 from functools import lru_cache
-from pydantic import field_validator, ValidationInfo
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
-from typing import Any
+from typing import Any, Optional
 
 
 class Settings(BaseSettings):
@@ -17,19 +17,18 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
     DB_NAME: str
 
-    DATABASE_URL: str | None = None
+    DATABASE_URL: Optional[str] = None
 
 
-    @field_validator("DATABASE_URL", mode="before")
-    def assemble_db_connection(cls, v: str, info: ValidationInfo) -> Any:
-        if isinstance(v, str):
-            return v
-        if not info.data:
-            return v
-        return (
-            f"postgresql://{info.data.get('DB_USER')}:{info.data.get('DB_PASSWORD')}@"
-            f"{info.data.get('DB_HOST')}:{info.data.get('DB_PORT')}/{info.data.get('DB_NAME')}"
+    @model_validator(mode='after')
+    def assemble_db_connection(self) -> "Settings":
+        if isinstance(self.DATABASE_URL, str):
+            return self
+        self.DATABASE_URL = (
+            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@"
+            f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
+        return self
 
     class Config:
         extra = "ignore"
