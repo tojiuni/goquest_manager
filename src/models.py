@@ -79,3 +79,13 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+
+
+def test_db_connection():
+    try:
+        with engine.connect() as connection:
+            connection.execute(func.now())
+        print("Database connection successful.")
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+

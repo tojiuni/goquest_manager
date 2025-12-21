@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 import uuid
 from src.engine import ExecutionEngine
-from src.models import init_db
+from src.models import init_db, test_db_connection
 
 
 def main():
@@ -11,6 +11,9 @@ def main():
 
     # Init DB command
     parser_initdb = subparsers.add_parser("initdb", help="Initialize the database")
+
+    # Test DB command
+    parser_testdb = subparsers.add_parser("testdb", help="Test the database connection")
 
     # Create command
     parser_create = subparsers.add_parser("create", help="Create resources from a template")
@@ -29,6 +32,8 @@ def main():
         print("Initializing database...")
         init_db()
         print("Database initialized.")
+    elif args.command == "testdb":
+        test_db_connection()
     elif args.command == "create":
         if not args.template_file.is_file():
             print(f"Error: Template file not found at {args.template_file}")
