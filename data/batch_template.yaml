@@ -1,0 +1,20 @@
+# batch_template.yaml
+
+batch_name: "2025_Q1_Roadmap"
+projects:
+  - name: "AI Platform"
+    slug: "AIP"
+    cycles:
+      - name: "Sprint 01"
+        start_date: "2025-01-01"
+        end_date: "2025-01-14"
+    modules:
+      - name: "Core Engine"
+    issues:
+      - name: "LLM Pipeline Setup"
+        priority: "high"
+        cycle: "Sprint 01"
+        module: "Core Engine"
+        sub_issues:
+          - name: "Tokenization Logic"
+          - name: "Vector DB Integration"
