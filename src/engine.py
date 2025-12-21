@@ -29,15 +29,16 @@ class ExecutionEngine:
         print(f"Starting batch '{batch.id}' for template '{template.batch_name}'")
 
         try:
+            workspace_slug = template.workspace_slug
             for proj_template in template.projects:
                 # For simplicity, we create a new project every time.
                 # A real-world scenario might involve checking if it exists.
-                project_data = self.plane_client.create_project(name=proj_template.name)
+                project_data = self.plane_client.create_project(workspace_slug=workspace_slug, name=proj_template.name)
                 project_id = project_data["id"]
                 project_slug = project_data["identifier"] # Assuming API returns 'identifier' as slug
                 
                 self._save_resource(
-                    db, batch.id, ResourceType.PROJECT, project_id, project_slug
+                    db, batch.id, ResourceType.PROJECT, project_id, project_slug, workspace_slug=workspace_slug
                 )
                 print(f"  Created Project: {proj_template.name} ({project_id})")
 
@@ -45,6 +46,7 @@ class ExecutionEngine:
                 cycle_ids = {}
                 for cycle_template in proj_template.cycles:
                     cycle_data = self.plane_client.create_cycle(
+                        workspace_slug=workspace_slug,
                         project_id=project_id,
                         name=cycle_template.name,
                         start_date=cycle_template.start_date.isoformat() if cycle_template.start_date else None,
@@ -53,46 +55,48 @@ class ExecutionEngine:
                     cycle_id = cycle_data["id"]
                     cycle_ids[cycle_template.name] = cycle_id
                     self._save_resource(
-                        db, batch.id, ResourceType.CYCLE, cycle_id, project_slug
+                        db, batch.id, ResourceType.CYCLE, cycle_id, project_slug, workspace_slug=workspace_slug
                     )
                     print(f"    Created Cycle: {cycle_template.name} ({cycle_id})")
 
                 module_ids = {}
                 for module_template in proj_template.modules:
                     module_data = self.plane_client.create_module(
-                        project_id=project_id, name=module_template.name
+                        workspace_slug=workspace_slug, project_id=project_id, name=module_template.name
                     )
                     module_id = module_data["id"]
                     module_ids[module_template.name] = module_id
                     self._save_resource(
-                        db, batch.id, ResourceType.MODULE, module_id, project_slug
+                        db, batch.id, ResourceType.MODULE, module_id, project_slug, workspace_slug=workspace_slug
                     )
                     print(f"    Created Module: {module_template.name} ({module_id})")
 
                 for issue_template in proj_template.issues:
                     issue_data = self.plane_client.create_issue(
+                        workspace_slug=workspace_slug,
                         project_id=project_id,
                         name=issue_template.name,
                         priority=issue_template.priority,
                     )
                     issue_id = issue_data["id"]
                     self._save_resource(
-                        db, batch.id, ResourceType.ISSUE, issue_id, project_slug
+                        db, batch.id, ResourceType.ISSUE, issue_id, project_slug, workspace_slug=workspace_slug
                     )
                     print(f"      Created Issue: {issue_template.name} ({issue_id})")
 
                     # Link to cycle/module
                     if issue_template.cycle and issue_template.cycle in cycle_ids:
-                        self.plane_client.add_issue_to_cycle(project_id, cycle_ids[issue_template.cycle], [issue_id])
+                        self.plane_client.add_issue_to_cycle(workspace_slug, project_id, cycle_ids[issue_template.cycle], [issue_id])
                         print(f"        - Linked to cycle '{issue_template.cycle}'")
                     
                     if issue_template.module and issue_template.module in module_ids:
-                        self.plane_client.add_issue_to_module(project_id, module_ids[issue_template.module], [issue_id])
+                        self.plane_client.add_issue_to_module(workspace_slug, project_id, module_ids[issue_template.module], [issue_id])
                         print(f"        - Linked to module '{issue_template.module}'")
 
                     # Create sub-issues
                     for sub_issue_template in issue_template.sub_issues:
                         sub_issue_data = self.plane_client.create_issue(
+                            workspace_slug=workspace_slug,
                             project_id=project_id,
                             name=sub_issue_template.name,
                             priority=sub_issue_template.priority,
@@ -105,6 +109,7 @@ class ExecutionEngine:
                             ResourceType.ISSUE,
                             sub_issue_id,
                             project_slug,
+                            workspace_slug=workspace_slug,
                             parent_id=issue_id,
                         )
                         print(f"        Created Sub-issue: {sub_issue_template.name} ({sub_issue_id})")
@@ -128,6 +133,7 @@ class ExecutionEngine:
         resource_type: ResourceType,
         plane_id: uuid.UUID,
         project_slug: str,
+        workspace_slug: Optional[str] = None,
         parent_id: Optional[uuid.UUID] = None,
     ):
         resource = CreatedResource(
@@ -135,6 +141,7 @@ class ExecutionEngine:
             resource_type=resource_type,
             plane_id=plane_id,
             project_slug=project_slug,
+            workspace_slug=workspace_slug,
             parent_id=parent_id,
         )
         db.add(resource)
@@ -158,20 +165,16 @@ class ExecutionEngine:
             try:
                 if resource.resource_type == ResourceType.ISSUE:
                     print(f"  Deleting Issue: {resource.plane_id}")
-                    self.plane_client.delete_issue(resource.project_slug, resource.plane_id)
+                    self.plane_client.delete_issue(resource.workspace_slug, resource.project_slug, resource.plane_id)
                 elif resource.resource_type == ResourceType.MODULE:
                     print(f"  Deleting Module: {resource.plane_id}")
-                    self.plane_client.delete_module(resource.project_slug, resource.plane_id)
+                    self.plane_client.delete_module(resource.workspace_slug, resource.project_slug, resource.plane_id)
                 elif resource.resource_type == ResourceType.CYCLE:
                     print(f"  Deleting Cycle: {resource.plane_id}")
-                    self.plane_client.delete_cycle(resource.project_slug, resource.plane_id)
+                    self.plane_client.delete_cycle(resource.workspace_slug, resource.project_slug, resource.plane_id)
                 elif resource.resource_type == ResourceType.PROJECT:
                     print(f"  Deleting Project: {resource.plane_id}")
-                    # The client uses slug, but we stored the ID.
-                    # Assuming we can delete by project ID (more robust).
-                    # The current plane_client needs a delete_project_by_id method.
-                    # Let's assume the current delete_project takes an ID, not slug.
-                    self.plane_client.delete_project(resource.plane_id)
+                    self.plane_client.delete_project(resource.workspace_slug, resource.plane_id)
                 
                 db.delete(resource)
                 db.commit()

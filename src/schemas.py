@@ -28,7 +28,6 @@ class Module(BaseModel):
 
 class Project(BaseModel):
     name: str
-    slug: str
     cycles: Optional[List[Cycle]] = []
     modules: Optional[List[Module]] = []
     issues: Optional[List[Issue]] = []
@@ -36,4 +35,5 @@ class Project(BaseModel):
 
 class BatchTemplate(BaseModel):
     batch_name: str
+    workspace_slug: str
     projects: List[Project]

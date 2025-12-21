@@ -60,6 +60,7 @@ class CreatedResource(Base):
     )
     resource_type = Column(SAEnum(ResourceType), nullable=False)
     plane_id = Column(UUID(as_uuid=True), nullable=False, unique=True, index=True)
+    workspace_slug = Column(String, nullable=True)
     project_slug = Column(String, nullable=True)  # Projects won't have this
     parent_id = Column(UUID(as_uuid=True), nullable=True)  # For sub-issues
     created_at = Column(

@@ -1,9 +1,9 @@
 # batch_template.yaml
 
 batch_name: "2025_Q1_Roadmap"
+workspace_slug: "gatemore-ai"
 projects:
   - name: "AI Platform"
-    slug: "AIP"
     cycles:
       - name: "Sprint 01"
         start_date: "2025-01-01"
