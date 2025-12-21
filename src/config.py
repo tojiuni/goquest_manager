@@ -1,6 +1,7 @@
 from functools import lru_cache
-from pydantic import BaseSettings, validator
-from typing import Dict, Any
+from pydantic import field_validator, ValidationInfo
+from pydantic_settings import BaseSettings
+from typing import Any
 
 
 class Settings(BaseSettings):
@@ -18,13 +19,15 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = None
 
-    @validator("DATABASE_URL", pre=True, always=True)
-    def assemble_db_connection(cls, v: str, values: Dict[str, Any]) -> Any:
+    @field_validator("DATABASE_URL", mode="before")
+    def assemble_db_connection(cls, v: str, info: ValidationInfo) -> Any:
         if isinstance(v, str):
             return v
+        if not info.data:
+            return v
         return (
-            f"postgresql://{values.get('DB_USER')}:{values.get('DB_PASSWORD')}@"
-            f"{values.get('DB_HOST')}:{values.get('DB_PORT')}/{values.get('DB_NAME')}"
+            f"postgresql://{info.data.get('DB_USER')}:{info.data.get('DB_PASSWORD')}@"
+            f"{info.data.get('DB_HOST')}:{info.data.get('DB_PORT')}/{info.data.get('DB_NAME')}"
         )
 
     class Config:
