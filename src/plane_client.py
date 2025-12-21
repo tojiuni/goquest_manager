@@ -41,6 +41,8 @@ class PlaneAPIClient:
         payload = {"name": name}
         if slug:
             payload["identifier"] = slug
+        else:
+            payload["identifier"] = name.lower().replace(" ", "-")
         return self._request("POST", workspace_slug, "projects", json=payload)
 
     def create_cycle(
