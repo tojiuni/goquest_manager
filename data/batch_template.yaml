@@ -1,7 +1,7 @@
 # batch_template.yaml
 
 batch_name: "2025_Q1_Roadmap"
-workspace_slug: "gatemore-ai"
+workspace_slug: "lyckabc"
 projects:
   - name: "AI Platform"
     cycles:

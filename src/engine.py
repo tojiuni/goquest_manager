@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 from sqlalchemy.orm import Session
+import traceback
 from src.template_parser import parse_template
 from src.plane_client import PlaneAPIClient
 from src.models import (
@@ -34,6 +35,9 @@ class ExecutionEngine:
                 # For simplicity, we create a new project every time.
                 # A real-world scenario might involve checking if it exists.
                 project_data = self.plane_client.create_project(workspace_slug=workspace_slug, name=proj_template.name)
+                if not project_data:
+                    print(f"  Failed to create project '{proj_template.name}'. Skipping.")
+                    break # Stop processing this batch if a project fails
                 project_id = project_data["id"]
                 project_slug = project_data["identifier"] # Assuming API returns 'identifier' as slug
                 
@@ -52,6 +56,9 @@ class ExecutionEngine:
                         start_date=cycle_template.start_date.isoformat() if cycle_template.start_date else None,
                         end_date=cycle_template.end_date.isoformat() if cycle_template.end_date else None,
                     )
+                    if not cycle_data:
+                        print(f"    Failed to create cycle '{cycle_template.name}'. Skipping.")
+                        continue
                     cycle_id = cycle_data["id"]
                     cycle_ids[cycle_template.name] = cycle_id
                     self._save_resource(
@@ -64,6 +71,9 @@ class ExecutionEngine:
                     module_data = self.plane_client.create_module(
                         workspace_slug=workspace_slug, project_id=project_id, name=module_template.name
                     )
+                    if not module_data:
+                        print(f"    Failed to create module '{module_template.name}'. Skipping.")
+                        continue
                     module_id = module_data["id"]
                     module_ids[module_template.name] = module_id
                     self._save_resource(
@@ -78,6 +88,9 @@ class ExecutionEngine:
                         name=issue_template.name,
                         priority=issue_template.priority,
                     )
+                    if not issue_data:
+                        print(f"      Failed to create issue '{issue_template.name}'. Skipping.")
+                        continue
                     issue_id = issue_data["id"]
                     self._save_resource(
                         db, batch.id, ResourceType.ISSUE, issue_id, project_slug, workspace_slug=workspace_slug
@@ -102,6 +115,9 @@ class ExecutionEngine:
                             priority=sub_issue_template.priority,
                             parent_id=issue_id,
                         )
+                        if not sub_issue_data:
+                            print(f"        Failed to create sub-issue '{sub_issue_template.name}'. Skipping.")
+                            continue
                         sub_issue_id = sub_issue_data["id"]
                         self._save_resource(
                             db,
@@ -120,6 +136,7 @@ class ExecutionEngine:
 
         except Exception as e:
             print(f"Error during batch execution: {e}")
+            traceback.print_exc()
             batch.status = SyncStatus.FAILED
             db.commit()
             # Here you could trigger a partial cleanup if needed
