@@ -6,3 +6,6 @@ pydantic-settings
 python-dotenv
 pyyaml
 httpx
+fastapi
+uvicorn[standard]
+python-multipart

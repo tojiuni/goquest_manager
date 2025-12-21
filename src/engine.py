@@ -18,7 +18,7 @@ class ExecutionEngine:
     def __init__(self):
         self.plane_client = PlaneAPIClient()
 
-    def run_creation(self, template_path: Path):
+    def run_creation(self, template_path: Path) -> SyncBatch:
         db: Session = next(get_db())
         template = parse_template(template_path)
 
@@ -27,27 +27,20 @@ class ExecutionEngine:
         db.commit()
         db.refresh(batch)
 
-        print(f"Starting batch '{batch.id}' for template '{template.batch_name}'")
-
         try:
             workspace_slug = template.workspace_slug
             for proj_template in template.projects:
-                # For simplicity, we create a new project every time.
-                # A real-world scenario might involve checking if it exists.
                 project_data = self.plane_client.create_project(workspace_slug=workspace_slug, name=proj_template.name)
-                print(f"DEBUG: project_data={project_data}")
                 if not project_data or "id" not in project_data:
-                    print(f"  Failed to create project '{proj_template.name}'. Skipping.")
-                    break # Stop processing this batch if a project fails
+                    raise Exception(f"Failed to create project '{proj_template.name}'.")
+                
                 project_id = project_data["id"]
-                project_slug = project_data["identifier"] # Assuming API returns 'identifier' as slug
+                project_slug = project_data["identifier"]
                 
                 self._save_resource(
                     db, batch.id, ResourceType.PROJECT, project_id, project_slug, workspace_slug=workspace_slug
                 )
-                print(f"  Created Project: {proj_template.name} ({project_id})")
 
-                # Store created cycle and module IDs for issue linking
                 cycle_ids = {}
                 for cycle_template in proj_template.cycles:
                     cycle_data = self.plane_client.create_cycle(
@@ -58,14 +51,12 @@ class ExecutionEngine:
                         end_date=cycle_template.end_date.isoformat() if cycle_template.end_date else None,
                     )
                     if not cycle_data or "id" not in cycle_data:
-                        print(f"    Failed to create cycle '{cycle_template.name}'. Skipping.")
                         continue
                     cycle_id = cycle_data["id"]
                     cycle_ids[cycle_template.name] = cycle_id
                     self._save_resource(
                         db, batch.id, ResourceType.CYCLE, cycle_id, project_slug, workspace_slug=workspace_slug
                     )
-                    print(f"    Created Cycle: {cycle_template.name} ({cycle_id})")
 
                 module_ids = {}
                 for module_template in proj_template.modules:
@@ -73,14 +64,12 @@ class ExecutionEngine:
                         workspace_slug=workspace_slug, project_id=project_id, name=module_template.name
                     )
                     if not module_data or "id" not in module_data:
-                        print(f"    Failed to create module '{module_template.name}'. Skipping.")
                         continue
                     module_id = module_data["id"]
                     module_ids[module_template.name] = module_id
                     self._save_resource(
                         db, batch.id, ResourceType.MODULE, module_id, project_slug, workspace_slug=workspace_slug
                     )
-                    print(f"    Created Module: {module_template.name} ({module_id})")
 
                 for issue_template in proj_template.issues:
                     issue_data = self.plane_client.create_issue(
@@ -90,24 +79,18 @@ class ExecutionEngine:
                         priority=issue_template.priority,
                     )
                     if not issue_data or "id" not in issue_data:
-                        print(f"      Failed to create issue '{issue_template.name}'. Skipping.")
                         continue
                     issue_id = issue_data["id"]
                     self._save_resource(
                         db, batch.id, ResourceType.ISSUE, issue_id, project_slug, workspace_slug=workspace_slug
                     )
-                    print(f"      Created Issue: {issue_template.name} ({issue_id})")
 
-                    # Link to cycle/module
                     if issue_template.cycle and issue_template.cycle in cycle_ids:
                         self.plane_client.add_issue_to_cycle(workspace_slug, project_id, cycle_ids[issue_template.cycle], [issue_id])
-                        print(f"        - Linked to cycle '{issue_template.cycle}'")
                     
                     if issue_template.module and issue_template.module in module_ids:
                         self.plane_client.add_issue_to_module(workspace_slug, project_id, module_ids[issue_template.module], [issue_id])
-                        print(f"        - Linked to module '{issue_template.module}'")
 
-                    # Create sub-issues
                     for sub_issue_template in issue_template.sub_issues:
                         sub_issue_data = self.plane_client.create_issue(
                             workspace_slug=workspace_slug,
@@ -117,7 +100,6 @@ class ExecutionEngine:
                             parent_id=issue_id,
                         )
                         if not sub_issue_data or "id" not in sub_issue_data:
-                            print(f"        Failed to create sub-issue '{sub_issue_template.name}'. Skipping.")
                             continue
                         sub_issue_id = sub_issue_data["id"]
                         self._save_resource(
@@ -129,18 +111,17 @@ class ExecutionEngine:
                             workspace_slug=workspace_slug,
                             parent_id=issue_id,
                         )
-                        print(f"        Created Sub-issue: {sub_issue_template.name} ({sub_issue_id})")
 
             batch.status = SyncStatus.COMPLETED
             db.commit()
-            print(f"Batch '{batch.id}' completed successfully.")
+            db.refresh(batch)
+            return batch
 
         except Exception as e:
-            print(f"Error during batch execution: {e}")
             traceback.print_exc()
             batch.status = SyncStatus.FAILED
             db.commit()
-            # Here you could trigger a partial cleanup if needed
+            raise e
         finally:
             db.close()
 

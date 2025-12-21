@@ -1,14 +1,15 @@
 # GoQuest Manager
 
-GoQuest Manager is a command-line tool for bulk creating and managing resources (Projects, Cycles, Modules, Issues) in a [Plane](https://plane.so/) instance. It uses YAML templates to define a hierarchy of resources and synchronizes their state with a local PostgreSQL database. This allows for reliable batch operations, tracking, and cleanup.
+GoQuest Manager is a service for bulk creating and managing resources (Projects, Cycles, Modules, Issues) in a [Plane](https://plane.so/) instance. It uses a FastAPI server to accept YAML templates and synchronizes their state with a local PostgreSQL database. This allows for reliable batch operations, tracking, and cleanup.
 
 ## Features
 
-- **Bulk Creation**: Create entire project structures from a single YAML file.
+- **API-Driven**: Exposes a FastAPI endpoint to create entire project structures from a single YAML file.
 - **State Synchronization**: Keeps track of all created Plane resources in a local database.
-- **Transactional Operations**: Manages creation in batches, allowing for easy cleanup and rollbacks.
+- **Transactional Operations**: Manages creation in batches, allowing for easy tracking.
 - **Hierarchical Structure**: Supports creating projects, cycles, modules, issues, and sub-issues.
 - **Declarative Templates**: Define your project structure in an intuitive and readable YAML format.
+- **Automatic API Docs**: Interactive API documentation powered by Swagger UI.
 
 ---
 
@@ -42,29 +43,16 @@ This is the recommended method for running the application.
     ```
 
 4.  **Initialize the Application Database**
-    This command sets up the necessary tables in the PostgreSQL database.
+    This one-time command sets up the necessary tables in the PostgreSQL database.
     ```bash
-    docker-compose run --rm app python main.py initdb
+    docker-compose run --rm app python -c "from src.models import init_db; init_db()"
     ```
 
-5.  **Create Resources**
-    Run the `create` command with a template file. An example is provided in `data/batch_template.yaml`.
+5.  **Run the FastAPI Server**
     ```bash
-    docker-compose run --rm app python main.py create data/batch_template.yaml
+    docker-compose up --build app
     ```
-    Take note of the `batch_id` output after the command succeeds.
-
-6.  **Clean Up Resources (Optional)**
-    To delete all resources created in a specific batch, use the `cleanup` command with the corresponding `batch_id`.
-    ```bash
-    docker-compose run --rm app python main.py cleanup <your_batch_id>
-    ```
-
-7.  **Stop Services**
-    When you are finished, stop and remove the containers.
-    ```bash
-    docker-compose down
-    ```
+    The server will be accessible at `http://localhost:8000`.
 
 ---
 
@@ -108,17 +96,56 @@ Follow these instructions to run the application directly on your local machine.
     -   Fill in your `PLANE_API_KEY` and `PLANE_WORKSPACE_SLUG`.
 
 5.  **Initialize the Database**
+    You can run this one-time setup command to initialize the database tables.
     ```bash
-    python main.py testdb
-    python main.py initdb
+    python -c "from src.models import init_db; init_db()"
     ```
 
-6.  **Run Commands**
-    You can now use the CLI directly.
+6.  **Run the FastAPI Server**
+    You can now run the API server using Uvicorn.
     ```bash
-    # Create resources
-    python main.py create data/batch_template.yaml
-
-    # Clean up resources
-    python main.py cleanup <your_batch_id>
+    uvicorn main:app --reload
     ```
+    The `--reload` flag automatically reloads the server when you make code changes.
+
+---
+
+## FastAPI Server
+
+Once the server is running, you can interact with the API.
+
+### Accessing API Documentation
+
+The application provides automatically generated API documentation using Swagger UI. Once the server is running, navigate to the following URL in your browser:
+
+[**http://127.0.0.1:8000/docs**](http://127.0.0.1:8000/docs)
+
+Here, you can see all available endpoints, their parameters, and test them interactively directly in the browser.
+
+### Creating Resources via API
+
+To create resources, send a `POST` request to the `/create/` endpoint with your YAML template file.
+
+An example template is provided at `data/batch_template.yaml`.
+
+#### Example using `curl`
+
+```bash
+curl -X POST -F "file=@data/batch_template.yaml" http://127.0.0.1:8000/create/
+```
+
+#### Successful Response
+
+A successful request will return a JSON response containing the batch information:
+
+```json
+{
+  "message": "Resource creation process started successfully.",
+  "batch_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+  "template_name": "Example Project Batch",
+  "status": "RUNNING"
+}
+```
+
+You can use the `batch_id` to track the created resources in the database.
+
