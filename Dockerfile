@@ -9,11 +9,9 @@ COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-RUN uvicorn main:app --host 0.0.0.0
+
 # Copy the rest of the application's code to the working directory
 COPY . .
 
-# The default command to run when the container starts.
-# We use tail -f /dev/null to keep the container running so we can exec into it
-# or use `docker-compose run` for our commands.
-CMD ["tail", "-f", "/dev/null"]
+# The command to run when the container starts.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
