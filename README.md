@@ -104,7 +104,9 @@ Follow these instructions to run the application directly on your local machine.
 6.  **Run the FastAPI Server**
     You can now run the API server using Uvicorn.
     ```bash
-    uvicorn main:app --reload
+    # host 0.0.0.0 to allow access from other machines
+    # ex sample.com:8019 (if allow port forwarding & firewall 8019 open)
+    uvicorn main:app --host 0.0.0.0 --port 8019
     ```
     The `--reload` flag automatically reloads the server when you make code changes.
 
