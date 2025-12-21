@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     DB_PASSWORD: str
     DB_NAME: str
 
-    DATABASE_URL: str = None
+    DATABASE_URL: str
 
     @field_validator("DATABASE_URL", mode="before")
     def assemble_db_connection(cls, v: str, info: ValidationInfo) -> Any:
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
         )
 
     class Config:
-        env_file = ".env"
+        extra = "ignore"
 
 
 @lru_cache()

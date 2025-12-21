@@ -8,7 +8,7 @@ class PlaneAPIClient:
         settings = get_settings()
         self.base_url = f"{settings.PLANE_API_BASE_URL}/workspaces/{settings.PLANE_WORKSPACE_SLUG}"
         self.headers = {
-            "Authorization": f"Bearer {settings.PLANE_API_KEY}",
+            "x-api-key": settings.PLANE_API_KEY,
             "Content-Type": "application/json",
         }
 
