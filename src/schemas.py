@@ -28,6 +28,7 @@ class Module(BaseModel):
 
 class Project(BaseModel):
     name: str
+    slug: Optional[str] = None
     cycles: Optional[List[Cycle]] = []
     modules: Optional[List[Module]] = []
     issues: Optional[List[Issue]] = []

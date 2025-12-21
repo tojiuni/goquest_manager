@@ -30,7 +30,9 @@ class ExecutionEngine:
         try:
             workspace_slug = template.workspace_slug
             for proj_template in template.projects:
-                project_data = self.plane_client.create_project(workspace_slug=workspace_slug, name=proj_template.name)
+                project_data = self.plane_client.create_project(
+                    workspace_slug=workspace_slug, name=proj_template.name, slug=proj_template.slug
+                )
                 if not project_data or "id" not in project_data:
                     raise Exception(f"Failed to create project '{proj_template.name}'.")
                 

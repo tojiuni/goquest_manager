@@ -37,8 +37,10 @@ class PlaneAPIClient:
                 print(f"Request failed: {e}")
                 raise
     
-    def create_project(self, workspace_slug: str, name: str) -> Optional[Dict[str, Any]]:
+    def create_project(self, workspace_slug: str, name: str, slug: Optional[str] = None) -> Optional[Dict[str, Any]]:
         payload = {"name": name}
+        if slug:
+            payload["identifier"] = slug
         return self._request("POST", workspace_slug, "projects", json=payload)
 
     def create_cycle(
@@ -91,6 +93,6 @@ class PlaneAPIClient:
     def delete_cycle(self, workspace_slug: str, project_slug: str, cycle_id: str):
         return self._request("DELETE", workspace_slug, f"projects/{project_slug}/cycles/{cycle_id}")
 
-    def delete_project(self, workspace_slug: str, project_slug: str):
-        return self._request("DELETE", workspace_slug, f"projects/{project_slug}")
+    def delete_project(self, workspace_slug: str, project_id: str):
+        return self._request("DELETE", workspace_slug, f"projects/{project_id}")
 
