@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 from sqlalchemy.orm import Session
 from src.template_parser import parse_template
 from src.plane_client import PlaneAPIClient
