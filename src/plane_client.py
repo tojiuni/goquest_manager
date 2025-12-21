@@ -13,7 +13,7 @@ class PlaneAPIClient:
         }
 
     def _request(self, method: str, workspace_slug: str, endpoint: str, **kwargs) -> Optional[Dict[str, Any]]:
-        with httpx.Client(follow_redirects=True) as client:
+        with httpx.Client(follow_redirects=True, verify=False) as client:
             try:
                 url = f"{self.base_url}/workspaces/{workspace_slug}/{endpoint}"
                 response = client.request(
