@@ -49,7 +49,22 @@ class PlaneAPIClient:
             payload["identifier"] = slug
         else:
             payload["identifier"] = name.lower().replace(" ", "-")
-        return self._request("POST", workspace_slug, "projects", json=payload)
+        
+        response = self._request("POST", workspace_slug, "projects", json=payload)
+        
+        # Handle case where API returns a list/collection response instead of a single project object
+        if response and "results" in response and isinstance(response["results"], list):
+            # Try to find the project by name or identifier in the results
+            identifier = payload["identifier"].upper()
+            for project in response["results"]:
+                if (project.get("name") == name or 
+                    project.get("identifier", "").upper() == identifier):
+                    return project
+            # If not found, return the first result (might be newly created)
+            if len(response["results"]) > 0:
+                return response["results"][0]
+        
+        return response
 
     def create_cycle(
         self, workspace_slug: str, project_id: str, name: str, start_date: Optional[str], end_date: Optional[str]
