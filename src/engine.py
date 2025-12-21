@@ -35,7 +35,8 @@ class ExecutionEngine:
                 # For simplicity, we create a new project every time.
                 # A real-world scenario might involve checking if it exists.
                 project_data = self.plane_client.create_project(workspace_slug=workspace_slug, name=proj_template.name)
-                if not project_data:
+                print(f"DEBUG: project_data={project_data}")
+                if not project_data or "id" not in project_data:
                     print(f"  Failed to create project '{proj_template.name}'. Skipping.")
                     break # Stop processing this batch if a project fails
                 project_id = project_data["id"]
@@ -56,7 +57,7 @@ class ExecutionEngine:
                         start_date=cycle_template.start_date.isoformat() if cycle_template.start_date else None,
                         end_date=cycle_template.end_date.isoformat() if cycle_template.end_date else None,
                     )
-                    if not cycle_data:
+                    if not cycle_data or "id" not in cycle_data:
                         print(f"    Failed to create cycle '{cycle_template.name}'. Skipping.")
                         continue
                     cycle_id = cycle_data["id"]
@@ -71,7 +72,7 @@ class ExecutionEngine:
                     module_data = self.plane_client.create_module(
                         workspace_slug=workspace_slug, project_id=project_id, name=module_template.name
                     )
-                    if not module_data:
+                    if not module_data or "id" not in module_data:
                         print(f"    Failed to create module '{module_template.name}'. Skipping.")
                         continue
                     module_id = module_data["id"]
@@ -88,7 +89,7 @@ class ExecutionEngine:
                         name=issue_template.name,
                         priority=issue_template.priority,
                     )
-                    if not issue_data:
+                    if not issue_data or "id" not in issue_data:
                         print(f"      Failed to create issue '{issue_template.name}'. Skipping.")
                         continue
                     issue_id = issue_data["id"]
@@ -115,7 +116,7 @@ class ExecutionEngine:
                             priority=sub_issue_template.priority,
                             parent_id=issue_id,
                         )
-                        if not sub_issue_data:
+                        if not sub_issue_data or "id" not in sub_issue_data:
                             print(f"        Failed to create sub-issue '{sub_issue_template.name}'. Skipping.")
                             continue
                         sub_issue_id = sub_issue_data["id"]
