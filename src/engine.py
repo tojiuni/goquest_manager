@@ -2,8 +2,10 @@ from pathlib import Path
 from typing import Optional
 from sqlalchemy.orm import Session
 import traceback
+from fastapi import HTTPException
 from src.template_parser import parse_template
 from src.plane_client import PlaneAPIClient
+from src.exceptions import PlaneAPIException
 from src.models import (
     get_db,
     SyncBatch,
@@ -118,7 +120,12 @@ class ExecutionEngine:
             db.commit()
             db.refresh(batch)
             return batch
-
+        
+        except PlaneAPIException as e:
+            traceback.print_exc()
+            batch.status = SyncStatus.FAILED
+            db.commit()
+            raise HTTPException(status_code=e.status_code or 500, detail=str(e))
         except Exception as e:
             traceback.print_exc()
             batch.status = SyncStatus.FAILED

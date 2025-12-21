@@ -1,6 +1,7 @@
 import httpx
 from typing import Dict, Any, Optional, List
 from src.config import get_settings
+from src.exceptions import PlaneAPIException
 
 
 class PlaneAPIClient:
@@ -27,15 +28,20 @@ class PlaneAPIClient:
                 try:
                     return response.json()
                 except ValueError:
-                    print(f"API Error: Could not decode JSON from response: {response.text}")
-                    return None
+                    raise PlaneAPIException(f"Could not decode JSON from response: {response.text}")
 
             except httpx.HTTPStatusError as e:
-                print(f"API Error: {e.response.status_code} - {e.response.text}")
-                raise
+                status = e.response.status_code
+                text = e.response.text
+                if status == 401:
+                    msg = "Authentication failed. Check your PLANE_API_KEY."
+                elif status == 404:
+                    msg = "Resource not found. Check your PLANE_WORKSPACE_SLUG and other identifiers."
+                else:
+                    msg = f"API Error: {status} - {text}"
+                raise PlaneAPIException(msg, status_code=status) from e
             except httpx.RequestError as e:
-                print(f"Request failed: {e}")
-                raise
+                raise PlaneAPIException(f"Request failed: {e}") from e
     
     def create_project(self, workspace_slug: str, name: str, slug: Optional[str] = None) -> Optional[Dict[str, Any]]:
         payload = {"name": name}

@@ -53,11 +53,14 @@ def create_resources_from_yaml(file: UploadFile = File(..., description="YAML te
         # The engine will return the batch object
         batch_info = engine.run_creation(template_path)
 
+    except HTTPException as e:
+        # Re-raise HTTPException from the engine
+        raise e
     except Exception as e:
         # Clean up the temp file in case of an error during processing
         if 'template_path' in locals() and template_path.exists():
             template_path.unlink()
-        raise HTTPException(status_code=500, detail=f"An error occurred during resource creation: {e}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred during resource creation: {e}")
     finally:
         # Ensure the temporary file is cleaned up after processing
         if 'template_path' in locals() and template_path.exists():
