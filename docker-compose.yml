@@ -5,8 +5,6 @@ services:
   app:
     build: .
     container_name: goquest_app
-    depends_on:
-      - db
     env_file:
       - .env
     volumes:
