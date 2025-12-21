@@ -13,7 +13,7 @@ class PlaneAPIClient:
         }
 
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
-        with httpx.Client() as client:
+        with httpx.Client(follow_redirects=True) as client:
             try:
                 response = client.request(
                     method, f"{self.base_url}/{endpoint}", headers=self.headers, **kwargs
