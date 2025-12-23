@@ -9,7 +9,7 @@ class PlaneClient:
 
     def test_connection(self, workspace_slug: str):
         """Workspace 정보를 조회하여 연결 확인"""
-        url = f"{self.base_url}/workspaces/{workspace_slug}/"
+        url = f"{self.base_url}/workspaces/{workspace_slug}/projects/"
         try:
             response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
