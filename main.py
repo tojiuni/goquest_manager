@@ -2,6 +2,7 @@ from app.core.config import settings
 from app.services.plane_client import PlaneClient
 from app.database.session import SessionLocal
 from app.database.models import LogTable
+from app.services.metadata_service import MetadataService
 
 def run_step_1(workspace_slug: str):
     db = SessionLocal()
@@ -24,7 +25,31 @@ def run_step_1(workspace_slug: str):
         print(f"❌ 오류 발생: {e}")
     finally:
         db.close()
+def run_step_2(workspace_slug: str, test_project_id: str = None):
+    db = SessionLocal()
+    client = PlaneClient(settings.PLANE_API_BASE_URL, settings.PLANE_API_KEY)
+    meta_service = MetadataService(client)
+    
+    print(f"--- 2단계: 메타데이터 동기화 시작 ---")
+    
+    try:
+        # 1. 멤버 동기화
+        member_count = meta_service.sync_members(db, workspace_slug)
+        print(f"✅ 멤버 {member_count}명 동기화 완료")
+
+        # 2. 상태 동기화 (기존 프로젝트 ID가 있는 경우)
+        if test_project_id:
+            state_count = meta_service.sync_project_states(db, workspace_slug, test_project_id)
+            print(f"✅ 프로젝트({test_project_id}) 상태 {state_count}개 동기화 완료")
+            
+    except Exception as e:
+        print(f"❌ 2단계 오류: {e}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
-    # 테스트용 workspace_slug 입력
-    run_step_1("lyckabc")
+    # 본인의 정보로 수정하여 실행
+    WS_SLUG = "lyckabc"
+    PJ_SLUG = "test_1223B"
+    run_step_1(WS_SLUG)
+    run_step_2(WS_SLUG, PJ_SLUG)
