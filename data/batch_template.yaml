@@ -1,20 +1,127 @@
-# batch_template.yaml
-
-batch_name: "2025_Q1_Roadmap"
+batch_name: "edu_rag_2025"
 workspace_slug: "lyckabc"
 projects:
-  - name: "AI Platform"
+  - name: "test_rag"
+    identifier: "rag"
+    description: "RAG Study Project"
+    
+    # 전체 일정을 관리하는 Cycle
+    # Required: name, owned_by
     cycles:
-      - name: "Sprint 01"
-        start_date: "2025-01-01"
-        end_date: "2025-01-14"
+      - name: "RAG_Study_Week"
+        description: "Weekly cycle for RAG study"
+        start_date: "2025-12-21"
+        end_date: "2025-12-28"
+        owned_by: "573cee1a-85b3-4025-9b08-37755fb699b2" # User ID required
+        timezone: "Asia/Seoul"
+    
+    # 각 챕터를 구분할 Module
+    # Required: name
     modules:
-      - name: "Core Engine"
+      - name: "CH01. 텍스트 분할(Text Splitter)"
+        description: "Module for Text Splitters"
+        status: "in-progress"
+      - name: "CH02. 임베딩(Embedding)"
+        description: "Module for Embeddings"
+      - name: "CH03. 벡터저장소(VectorStore)"
+        description: "Module for Vector Stores"
+      - name: "CH04. 검색기(Retriever)"
+        description: "Module for Retrievers"
+      - name: "CH05. 리랭커(Reranker)"
+        description: "Module for Rerankers"
+      - name: "CH06. RAG 파이프라인"
+        description: "Module for RAG Pipelines"
+
+    # 계층형 이슈 구조 (Work Items)
+    # Required: name
     issues:
-      - name: "LLM Pipeline Setup"
+      # CH01
+      - name: "CH01. 텍스트 분할(Text Splitter) 학습"
+        description_html: "<p>Learn about text splitters</p>"
+        state: "backlog"
+        module: "CH01. 텍스트 분할(Text Splitter)"
+        cycle: "RAG_Study_Week"
         priority: "high"
-        cycle: "Sprint 01"
-        module: "Core Engine"
         sub_issues:
-          - name: "Tokenization Logic"
-          - name: "Vector DB Integration"
+          - name: "01. 텍스트 분할의 개념과 중요성. 다양한 전략의 활용"
+          - name: "02. CharacterTextSplitter"
+          - name: "03. RecursiveCharacterTextSplitter"
+          - name: "04. TokenTextSplitter"
+          - name: "05. SemanticChunker"
+          - name: "06. Code Splitter"
+          - name: "07. MarkdownHeaderTextSplitter"
+          - name: "08. HTMLHeaderTextSplitter"
+          - name: "09. RecursiveJSONSplitter"
+
+      # CH02
+      - name: "CH02. 임베딩(Embedding) 학습"
+        description_html: "<p>Learn about embeddings</p>"
+        state: "backlog"
+        module: "CH02. 임베딩(Embedding)"
+        cycle: "RAG_Study_Week"
+        priority: "high"
+        sub_issues:
+          - name: "01. 임베딩(Embeddings) 개요"
+          - name: "02. OpenAIEmbeddings"
+          - name: "03. 캐시 임베딩(CacheBackedEmbeddings)"
+          - name: "04. 로컬 모델 임베딩(HuggingFaceEmbeddings)"
+          - name: "05. 업스테이지 임베딩(UpstageEmbeddings)"
+          - name: "06. 올라마 임베딩(OllamaEmbeddings)"
+
+      # CH03
+      - name: "CH03. 벡터저장소(VectorStore) 학습"
+        description_html: "<p>Learn about vector stores</p>"
+        state: "backlog"
+        module: "CH03. 벡터저장소(VectorStore)"
+        cycle: "RAG_Study_Week"
+        priority: "high"
+        sub_issues:
+          - name: "01. 벡터스토어(VectorStore) 개요"
+          - name: "02. Chroma"
+          - name: "03. FAISS"
+          - name: "04. Pinecone"
+
+      # CH04
+      - name: "CH04. 검색기(Retriever) 학습"
+        description_html: "<p>Learn about retrievers</p>"
+        state: "backlog"
+        module: "CH04. 검색기(Retriever)"
+        cycle: "RAG_Study_Week"
+        priority: "urgent"
+        sub_issues:
+          - name: "01. 검색기(Retriever) 개요"
+          - name: "02. 벡터스토어 기반 검색기(VectorStore-backed Retriever)"
+          - name: "03. 문서 압축기(ContextualCompressionRetriever)"
+          - name: "04. 앙상블 검색기(Ensemble Retriever)"
+          - name: "05. 긴 문서 재정렬(LongContext Reorder)"
+          - name: "06. 부모 문서 검색기(ParentDocument Retriever)"
+          - name: "07. 다중 쿼리 생성 검색기(MultiQuery Retriever)"
+          - name: "08. 다중 벡터 검색기(MultiVector Retriever)"
+          - name: "09. Self-Query Retriever"
+          - name: "10. TimeWeightedVectorStore Retriever"
+
+      # CH05
+      - name: "CH05. 리랭커(Reranker) 학습"
+        description_html: "<p>Learn about rerankers</p>"
+        state: "backlog"
+        module: "CH05. 리랭커(Reranker)"
+        cycle: "RAG_Study_Week"
+        priority: "medium"
+        sub_issues:
+          - name: "01. 리랭커(Reranker) 개요"
+          - name: "02. CrossEncoderReranker(BGE-m3-reranker)"
+          - name: "03. CohereReranker"
+          - name: "04. JinaReranker"
+          - name: "05. FlashRankReranker"
+
+      # CH06
+      - name: "CH06. RAG 파이프라인 구축"
+        description_html: "<p>Build RAG pipelines</p>"
+        state: "backlog"
+        module: "CH06. RAG 파이프라인"
+        cycle: "RAG_Study_Week"
+        priority: "urgent"
+        sub_issues:
+          - name: "01. [프로젝트] RAG 를 활용한 뉴스기사 기반 QA 시스템"
+          - name: "02. RAPTOR 논문 리뷰와 핵심 개념 소개"
+          - name: "03. RAPTOR 코드구현"

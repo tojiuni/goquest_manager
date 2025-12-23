@@ -1,124 +1,33 @@
-# GoQuest Manager
+# Plane Batch Management Service
 
-GoQuest Manager is a command-line tool for bulk creating and managing resources (Projects, Cycles, Modules, Issues) in a [Plane](https://plane.so/) instance. It uses YAML templates to define a hierarchy of resources and synchronizes their state with a local PostgreSQL database. This allows for reliable batch operations, tracking, and cleanup.
+이 서비스는 Plane API를 활용하여 YAML 템플릿 기반으로 프로젝트, 이슈, 하위 이슈를 계층 구조로 대량 생성하고, 생성된 이력을 PostgreSQL에 저장하여 언제든 일괄 삭제(Rollback)할 수 있도록 돕는 백엔드 시스템입니다.
 
-## Features
+## 🚀 주요 기능
+- **YAML 기반 대량 생성**: 복잡한 계층 구조를 한 번의 API 호출로 생성
+- **상태 추적**: 생성된 모든 Plane 리소스 ID를 DB에 기록
+- **안전한 일괄 삭제**: 생성 역순(LIFO)으로 리소스를 자동 삭제하여 의존성 문제 해결
+- **Cycles/Modules 연동**: 이슈 생성 시 특정 사이클과 모듈에 자동 할당
 
-- **Bulk Creation**: Create entire project structures from a single YAML file.
-- **State Synchronization**: Keeps track of all created Plane resources in a local database.
-- **Transactional Operations**: Manages creation in batches, allowing for easy cleanup and rollbacks.
-- **Hierarchical Structure**: Supports creating projects, cycles, modules, issues, and sub-issues.
-- **Declarative Templates**: Define your project structure in an intuitive and readable YAML format.
+## 🛠️ 설치 및 설정
 
----
+### 1. 환경 변수 설정
+`.env` 파일을 프로젝트 루트에 생성하고 아래 내용을 입력합니다.
+```env
+PLANE_API_BASE_URL=[https://app.plane.so/api/v1](https://app.plane.so/api/v1)
+PLANE_API_KEY=your_plane_api_token
 
-## Quick Setup (Docker Compose)
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=plane_manager_db
 
-This is the recommended method for running the application.
+LOG_LEVEL=info
 
-### Prerequisites
+## 
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-- Docker
-- Docker Compose
-
-### Instructions
-
-1.  **Clone the Repository**
-    ```bash
-    git clone <repository_url>
-    cd goquest_manager
-    ```
-
-2.  **Configure Environment**
-    Copy the example `.env` file and fill in your Plane API details.
-    ```bash
-    cp .env.example .env
-    ```
-    Now, edit `.env` and add your `PLANE_API_KEY` and `PLANE_WORKSPACE_SLUG`.
-
-3.  **Start the Database**
-    ```bash
-    docker-compose up -d db
-    ```
-
-4.  **Initialize the Application Database**
-    This command sets up the necessary tables in the PostgreSQL database.
-    ```bash
-    docker-compose run --rm app python main.py initdb
-    ```
-
-5.  **Create Resources**
-    Run the `create` command with a template file. An example is provided in `data/batch_template.yaml`.
-    ```bash
-    docker-compose run --rm app python main.py create data/batch_template.yaml
-    ```
-    Take note of the `batch_id` output after the command succeeds.
-
-6.  **Clean Up Resources (Optional)**
-    To delete all resources created in a specific batch, use the `cleanup` command with the corresponding `batch_id`.
-    ```bash
-    docker-compose run --rm app python main.py cleanup <your_batch_id>
-    ```
-
-7.  **Stop Services**
-    When you are finished, stop and remove the containers.
-    ```bash
-    docker-compose down
-    ```
-
----
-
-## Local Development Setup
-
-Follow these instructions to run the application directly on your local machine.
-
-### Prerequisites
-
-- Python 3.10+
-- PostgreSQL (running locally or accessible on the network)
-
-### Instructions
-
-1.  **Clone the Repository**
-    ```bash
-    git clone <repository_url>
-    cd goquest_manager
-    ```
-
-2.  **Create a Virtual Environment**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate
-    # On Windows, use `venv\Scripts\activate`
-    ```
-
-3.  **Install Dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Configure Environment**
-    Copy the example `.env` file.
-    ```bash
-    cp .env.example .env
-    ```
-    Edit the `.env` file with your details:
-    -   Set `DB_HOST` to `localhost` (or your PostgreSQL host).
-    -   Update `DB_USER`, `DB_PASSWORD`, and `DB_NAME` for your local database.
-    -   Fill in your `PLANE_API_KEY` and `PLANE_WORKSPACE_SLUG`.
-
-5.  **Initialize the Database**
-    ```bash
-    python main.py testdb
-    python main.py initdb
-    ```
-
-6.  **Run Commands**
-    You can now use the CLI directly.
-    ```bash
-    # Create resources
-    python main.py create data/batch_template.yaml
-
-    # Clean up resources
-    python main.py cleanup <your_batch_id>
-    ```
+### 
+uvicorn main:app --reload --port 8019

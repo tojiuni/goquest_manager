@@ -7,7 +7,6 @@ from typing import Any, Optional
 class Settings(BaseSettings):
     PLANE_API_BASE_URL: str
     PLANE_API_KEY: str
-    PLANE_WORKSPACE_SLUG: str
     LOG_LEVEL: str = "info"
 
     # Database settings
