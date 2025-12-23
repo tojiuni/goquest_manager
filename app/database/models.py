@@ -26,3 +26,9 @@ class PlaneState(Base):
     project_id = Column(String, index=True)
     name = Column(String) # 예: Todo, In Progress
     group = Column(String) # 예: backlog, unstarted, started, completed
+
+class PlaneProject(Base):
+    __tablename__ = "plane_projects"
+    id = Column(String, primary_key=True) # Project UUID
+    name = Column(String)
+    slug = Column(String)

@@ -46,10 +46,40 @@ def run_step_2(workspace_slug: str, test_project_id: str = None):
         print(f"❌ 2단계 오류: {e}")
     finally:
         db.close()
+def run_step_3(workspace_slug: str):
+    db = SessionLocal()
+    client = PlaneClient(settings.PLANE_API_BASE_URL, settings.PLANE_API_KEY)
+    meta_service = MetadataService(client)
+    
+    print(f"--- 3단계: 프로젝트 목록 동기화 시작 ---")
+    
+    try:
+        project_count = meta_service.sync_project_list(db, workspace_slug)
+        print(f"✅ 프로젝트 {project_count}개 동기화 완료")
+    except Exception as e:
+        print(f"❌ 3단계 오류: {e}")
+    finally:
+        db.close()
+def run_step_4(workspace_slug: str, project_name: str, identifier: str = None):
+    db = SessionLocal()
+    client = PlaneClient(settings.PLANE_API_BASE_URL, settings.PLANE_API_KEY)
+    meta_service = MetadataService(client)
+    
+    print(f"--- 4단계: 프로젝트 생성 시작 ---")
+    
+    try:
+        project_id = meta_service.create_project(db, workspace_slug, project_name, identifier=identifier)
+        print(f"✅ 프로젝트({project_id}) 생성 완료")
+    except Exception as e:
+        print(f"❌ 4단계 오류: {e}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     # 본인의 정보로 수정하여 실행
     WS_SLUG = "lyckabc"
     PJ_SLUG = "f5badd3d-79d9-4571-aed2-155cb03e4d66"
-    run_step_1(WS_SLUG)
-    run_step_2(WS_SLUG, PJ_SLUG)
+    # run_step_1(WS_SLUG)
+    # run_step_2(WS_SLUG, PJ_SLUG)
+    run_step_3(WS_SLUG)
+    run_step_4(WS_SLUG, "test_projectA", "TestA")
