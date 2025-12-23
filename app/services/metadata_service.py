@@ -12,15 +12,22 @@ class MetadataService:
         response = requests.get(url, headers=self.client.headers)
         
         if response.status_code == 200:
-            members = response.json().get('results', [])
+            data = response.json()
+            # API가 { "results": [...] } 형태거나 [...] 리스트 형태일 수 있음
+            members = data.get('results', []) if isinstance(data, dict) else data
+            
             for m in members:
-                user = m.get('member', {})
+                # API 응답 구조에 따라 'member' 키 안에 데이터가 있을 수도, 직접 있을 수도 있음
+                user = m.get('member', m) if isinstance(m, dict) else {}
+                if not user.get('id'):
+                    continue
+                    
                 obj = PlaneMember(
                     id=user.get('id'),
                     email=user.get('email'),
                     display_name=user.get('display_name')
                 )
-                db.merge(obj) # 존재하면 update, 없으면 insert
+                db.merge(obj)
             db.commit()
             return len(members)
         return 0
@@ -31,8 +38,13 @@ class MetadataService:
         response = requests.get(url, headers=self.client.headers)
         
         if response.status_code == 200:
-            states = response.json().get('results', []) # 혹은 리스트 구조 확인 필요
+            data = response.json()
+            states = data.get('results', []) if isinstance(data, dict) else data
+            
             for s in states:
+                if not isinstance(s, dict) or not s.get('id'):
+                    continue
+                    
                 obj = PlaneState(
                     id=s.get('id'),
                     project_id=project_id,

@@ -50,6 +50,6 @@ def run_step_2(workspace_slug: str, test_project_id: str = None):
 if __name__ == "__main__":
     # 본인의 정보로 수정하여 실행
     WS_SLUG = "lyckabc"
-    PJ_SLUG = "test_1223B"
+    PJ_SLUG = "f5badd3d-79d9-4571-aed2-155cb03e4d66"
     run_step_1(WS_SLUG)
     run_step_2(WS_SLUG, PJ_SLUG)
