@@ -74,6 +74,19 @@ def run_step_4(workspace_slug: str, project_name: str, identifier: str = None):
         print(f"❌ 4단계 오류: {e}")
     finally:
         db.close()
+def run_step_5(workspace_slug: str, project_id: str, workitem_name: str, state_id: str = None):
+    db = SessionLocal()
+    client = PlaneClient(settings.PLANE_API_BASE_URL, settings.PLANE_API_KEY)
+    meta_service = MetadataService(client)
+    
+    print(f"--- 5단계: 워크아이템 생성 시작 ---")
+    try:
+        item_id = meta_service.create_workitem(db, workspace_slug, project_id=project_id, title=workitem_name, state_id=None)
+        print(f"✅ 워크아이템({item_id}) 생성 완료")
+    except Exception as e:
+        print(f"❌ 5단계 오류: {e}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     # 본인의 정보로 수정하여 실행
@@ -81,5 +94,6 @@ if __name__ == "__main__":
     PJ_SLUG = "f5badd3d-79d9-4571-aed2-155cb03e4d66"
     # run_step_1(WS_SLUG)
     # run_step_2(WS_SLUG, PJ_SLUG)
-    run_step_3(WS_SLUG)
-    run_step_4(WS_SLUG, "test_projectA", "TestA")
+    # run_step_3(WS_SLUG)
+    # run_step_4(WS_SLUG, "test_projectB", "TestB")
+    run_step_5(WS_SLUG, "fbcb63ce-c564-40cb-819a-62c186e89577", "Test Workitem from Script", None)

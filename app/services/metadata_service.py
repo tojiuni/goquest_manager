@@ -110,3 +110,18 @@ class MetadataService:
             db.commit()
             return data.get('id')
         return None
+
+    def create_workitem(self, db, workspace_slug: str, project_id: str, title: str, state_id: str = None):
+        """새 워크아이템 생성"""
+        url = f"{self.client.base_url}/workspaces/{workspace_slug}/projects/{project_id}/work-items/"
+        payload = {
+            "name": title
+        }
+        
+        response = requests.post(url, headers=self.client.headers, json=payload)
+        res_json = response.json()
+        print(f"Response create Workitem: {res_json}")
+        
+        if response.status_code in [201, 200]:
+            return res_json.get('id')
+        return None
