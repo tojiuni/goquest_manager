@@ -93,8 +93,11 @@ class MetadataService:
             "identifier": identifier,
             "network": 2  # Public
         }
-        
-        response = requests.post(url, headers=self.client.headers, json=payload)
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": self.client.api_key
+        }
+        response = requests.post(url, headers=headers, json=payload)
         res_json = response.json()
         print(f"Response create Project: {res_json}")
         
@@ -125,3 +128,40 @@ class MetadataService:
         if response.status_code in [201, 200]:
             return res_json.get('id')
         return None
+
+    def create_cycle(self, db, workspace_slug: str, project_id: str, name: str, 
+                     start_date: str = None, end_date: str = None, description: str = None,
+                     owned_by: str = None, timezone: str = None):
+        """새 Cycle 생성"""
+        url = f"{self.client.base_url}/workspaces/{workspace_slug}/projects/{project_id}/cycles/"
+        payload = {
+            "name": name,
+            "project_id": project_id
+        }
+        
+        # 선택적 필드 추가
+        if description:
+            payload["description"] = description
+        if start_date:
+            payload["start_date"] = start_date
+        if end_date:
+            payload["end_date"] = end_date
+        if owned_by:
+            payload["owned_by"] = owned_by
+        if timezone:
+            payload["timezone"] = timezone
+        
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": self.client.api_key
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        res_json = response.json()
+        print(f"Response create Cycle: {res_json}")
+        
+        if response.status_code in [201, 200]:
+            return res_json.get('id')
+        else:
+            print(f"❌ Cycle 생성 실패: {response.status_code} - {res_json}")
+            return None
